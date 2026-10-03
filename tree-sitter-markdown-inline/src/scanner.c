@@ -218,6 +218,31 @@ static bool parse_star(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
     return false;
 }
 
+// Pandoc sub/superscript: the content up to the next single `delimiter` must be
+// non-empty and contain no unescaped whitespace. Only advances past mark_end.
+static bool has_unspaced_closer(TSLexer *lexer, int32_t delimiter) {
+    bool empty = true;
+    while (!lexer->eof(lexer)) {
+        int32_t chr = lexer->lookahead;
+        if (chr == delimiter) {
+            lexer->advance(lexer, false);
+            return !empty && lexer->lookahead != delimiter;
+        }
+        if (chr == ' ' || chr == '\t' || chr == '\n' || chr == '\r') {
+            return false;
+        }
+        if (chr == '\\') {
+            lexer->advance(lexer, false);
+            if (lexer->eof(lexer)) {
+                return false;
+            }
+        }
+        lexer->advance(lexer, false);
+        empty = false;
+    }
+    return false;
+}
+
 static bool parse_tilde(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
     lexer->advance(lexer, false);
     // If `num_emphasis_delimiters_left` is not zero then we already decided
@@ -297,7 +322,8 @@ static bool parse_tilde(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
         }
         if (!next_symbol_whitespace && (!next_symbol_punctuation ||
                                         valid_symbols[LAST_TOKEN_PUNCTUATION] ||
-                                        valid_symbols[LAST_TOKEN_WHITESPACE])) {
+                                        valid_symbols[LAST_TOKEN_WHITESPACE]) &&
+            valid_symbols[SUBSCRIPT_OPEN] && has_unspaced_closer(lexer, '~')) {
             s->state |= STATE_EMPHASIS_DELIMITER_IS_OPEN;
             lexer->result_symbol = SUBSCRIPT_OPEN;
             return true;
@@ -444,7 +470,9 @@ static bool parse_caret(Scanner *s, TSLexer *lexer, const bool *valid_symbols) {
         }
         if (!next_symbol_whitespace && (!next_symbol_punctuation ||
                                         valid_symbols[LAST_TOKEN_PUNCTUATION] ||
-                                        valid_symbols[LAST_TOKEN_WHITESPACE])) {
+                                        valid_symbols[LAST_TOKEN_WHITESPACE]) &&
+            valid_symbols[SUPERSCRIPT_OPEN] &&
+            (caret_count > 1 || has_unspaced_closer(lexer, '^'))) {
             s->state |= STATE_EMPHASIS_DELIMITER_IS_OPEN;
             lexer->result_symbol = SUPERSCRIPT_OPEN;
             return true;

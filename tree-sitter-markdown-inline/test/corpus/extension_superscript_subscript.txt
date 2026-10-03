@@ -33,3 +33,33 @@ Double tildes are parsed as strikethrough, not subscript
       (emphasis_delimiter)
       (emphasis_delimiter))
     (emphasis_delimiter)))
+
+================================================================================
+Subscript and superscript content cannot contain spaces
+================================================================================
+a ~b c~ d ^e f^ g
+
+-------------------------------------------------------------------------------
+(inline)
+
+================================================================================
+Escaped spaces are allowed in subscript and superscript
+================================================================================
+a ~b\ c~ d ^e\ f^ g
+
+-------------------------------------------------------------------------------
+(inline
+  (subscript
+    (emphasis_delimiter)
+    (emphasis_delimiter))
+  (superscript
+    (emphasis_delimiter)
+    (emphasis_delimiter)))
+
+================================================================================
+Unmatched tildes and carets across words are not sub/superscript
+================================================================================
+x ~5 y ~10 min, ~/home and x ^5 y ^10 min, ^/home
+
+-------------------------------------------------------------------------------
+(inline)
