@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [split_parser]
+    branches: [split_parser, kerebron]
   pull_request:
-    branches: [split_parser]
+    branches: [split_parser, kerebron]
   workflow_dispatch:
 
 concurrency:
